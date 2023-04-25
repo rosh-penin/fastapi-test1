@@ -2,9 +2,11 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from constants import EXC401
-from engine import api, Session
+from crud import create, read_list, update
+from engine import api
 from models import User, Project
-from schemas import ProjectScheme, UserCreateScheme, UserRepresentScheme
+from schemas import (ProjectScheme, UserCreateScheme,
+                     UserRepresentScheme, UserUpdateScheme)
 from utils import auth_user, create_token, get_current_user, get_pass_hash
 
 
@@ -14,23 +16,35 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
     if not user:
         raise EXC401
     token = create_token({'sub': user.username})
-    return {'token': token}
+    return {'Bearer': token}
 
 
-@api.post('/users')
+@api.post('/users', response_model=UserRepresentScheme)
 async def create_user(user: UserCreateScheme):
     user.password = get_pass_hash(user.password)
-    with Session.begin() as session:
-        user_obj = User(**user.dict())
-        session.add(user_obj)
-        return UserRepresentScheme(user_obj)
+    user_obj = create(User, user.dict())
+    return user_obj
 
 
-# @api.get('/users')
-# async def verify_user(user_sc: UserCreateScheme):
-#     with Session() as session:
-#         user = session.query(User).filter_by(username=user_sc.username).first()
-#         return verify_pass(user_sc.password, user.password)
+@api.get('/users', response_model=list[UserRepresentScheme])
+async def get_users(cur_user: User = Depends(get_current_user)):
+    """Get all users."""
+    return read_list(User)
+
+
+@api.get('/users/me', response_model=UserRepresentScheme)
+async def get_user(cur_user: User = Depends(get_current_user)):
+    return cur_user
+
+
+@api.patch('/users/me', response_model=UserRepresentScheme)
+async def update_user(user: UserUpdateScheme,
+                      cur_user: User = Depends(get_current_user)):
+    if user.password:
+        user.password = get_pass_hash(user.password)
+    payload = user.dict(exclude_unset=True, exclude_none=True)
+    update(User, f'id == {cur_user.id}', payload)
+    return user
 
 
 @api.post('/projects')

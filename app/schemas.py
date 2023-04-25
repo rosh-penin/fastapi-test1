@@ -11,14 +11,19 @@ class ProjectScheme(BaseModel):
     images: list[ImageGetScheme] | None
 
 
-class UserCreateScheme(BaseModel):
-    first_name: str | None
-    last_name: str | None
-    username: str
-    password: str
-
-
 class UserRepresentScheme(BaseModel):
     first_name: str | None
     last_name: str | None
     username: str
+
+    class Config:
+        orm_mode = True
+
+
+class UserCreateScheme(UserRepresentScheme):
+    password: str
+
+
+class UserUpdateScheme(UserRepresentScheme):
+    username: str | None
+    password: str | None
