@@ -11,8 +11,9 @@ SECRET_KEY = os.getenv(
 )
 ALGORITHM = os.getenv('ALGORITHM', "HS256")
 TOKEN_EXP_MIN = timedelta(minutes=30)
-
 OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl='token')
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
-EXC401 = HTTPException(401, 'Imposter!')
+
 EXC400 = HTTPException(400, 'You did something wrong')
+EXC401 = HTTPException(401, 'Imposter!')
+EXC404 = HTTPException(404, 'Not found')

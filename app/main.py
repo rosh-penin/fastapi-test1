@@ -2,7 +2,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from constants import EXC401
-from crud import create, read_list, update
+from crud import create, delete, read_list, update
 from engine import api
 from models import User, Project
 from schemas import (ProjectScheme, UserCreateScheme,
@@ -45,6 +45,11 @@ async def update_user(user: UserUpdateScheme,
     payload = user.dict(exclude_unset=True, exclude_none=True)
     update(User, f'id == {cur_user.id}', payload)
     return user
+
+
+@api.delete('/users/me')
+async def delete_user(cur_user: User = Depends(get_current_user)):
+    delete(User, f'id == {cur_user.id}')
 
 
 @api.post('/projects')
