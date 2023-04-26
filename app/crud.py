@@ -1,13 +1,17 @@
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.orm import Session as sql_session
 
-from constants import EXC404
+from constants import EXC404, EXCINT
 from engine import Base
 
 
 def create(session: sql_session, model: Base, payload: dict):
     obj = model(**payload)
-    session.add(obj)
+    try:
+        session.add(obj)
+        session.commit()
+    except IntegrityError:
+        raise EXCINT
     return obj
 
 

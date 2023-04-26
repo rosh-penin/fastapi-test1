@@ -14,6 +14,7 @@ TOKEN_EXP_MIN = timedelta(minutes=30)
 OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl='token')
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-EXC400 = HTTPException(400, 'You did something wrong')
+EXC400 = HTTPException(400, 'Something gone wrong.')
+EXCINT = HTTPException(400, 'Already exists.')
 EXC401 = HTTPException(401, 'Imposter!')
 EXC404 = HTTPException(404, 'Not found')

@@ -73,5 +73,5 @@ async def add_project(
 
 @api.get('/projects', response_model=list[ProjectCreateScheme])
 async def list_projects(cur_user: User = Depends(get_current_user)):
-    with Session as session:
+    with Session() as session:
         return read_list(session, Project)

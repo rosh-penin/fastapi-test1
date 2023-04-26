@@ -6,16 +6,18 @@ from jose import JWTError, jwt
 from constants import (ALGORITHM, EXC401, OAUTH2_SCHEME, PWD_CONTEXT,
                        SECRET_KEY, TOKEN_EXP_MIN)
 from crud import read
+from engine import Session
 from models import User
 
 
 def auth_user(username: str, password: str):
-    user_obj = read(User, {'username': username})
-    if not user_obj:
-        return False
-    if not verify_pass(password, user_obj.password):
-        return False
-    return user_obj
+    with Session() as session:
+        user_obj = read(session, User, {'username': username})
+        if not user_obj:
+            return False
+        if not verify_pass(password, user_obj.password):
+            return False
+        return user_obj
 
 
 def create_token(data: dict, expires_d: timedelta = TOKEN_EXP_MIN):
@@ -32,10 +34,11 @@ async def get_current_user(token: str = Depends(OAUTH2_SCHEME)):
             raise EXC401
     except JWTError:
         raise EXC401
-    user = read(User, {'username': username})
-    if user is None:
-        raise EXC401
-    return user
+    with Session() as session:
+        user = read(session, User, {'username': username})
+        if user is None:
+            raise EXC401
+        return user
 
 
 def get_pass_hash(password: str):

@@ -18,6 +18,6 @@ if DB_ENGINE:
 else:
     engine = create_engine('sqlite:///mydatabase.db', echo=True)
 
-Session = sessionmaker(engine)
+Session = sessionmaker(engine, expire_on_commit=False)
 api = FastAPI()
 Base = declarative_base()
