@@ -4,8 +4,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from constants import EXC401
 from crud import create, delete, read_list, update
 from engine import api, Session
-from models import User, Project
-from schemas import (ProjectCreateScheme, UserCreateScheme,
+from models import Image, Project, User
+from schemas import (ProjectCreateScheme, ProjectGetScheme, UserCreateScheme,
                      UserRepresentScheme, UserUpdateScheme)
 from utils import auth_user, create_token, get_current_user, get_pass_hash
 
@@ -61,17 +61,18 @@ async def add_project(
     proj: ProjectCreateScheme,
     cur_user: User = Depends(get_current_user)
 ):
-    proj.user_id = cur_user.id
-    if proj.images:
-        images = proj.images.copy()
-        del proj.images
-        print(images)
     with Session.begin() as session:
-        create(session, Project, proj.dict())
-        return proj
+        proj_db = Project(name=proj.name, user_id=cur_user.id)
+        session.add(proj_db)
+        session.refresh(proj_db)
+        for image in proj.images:
+            image_db = Image(filename=image.filename, bytes=image.bytes,
+                             project_id=proj_db.id)
+            session.add(image_db)
+        return proj_db
 
 
-@api.get('/projects', response_model=list[ProjectCreateScheme])
+@api.get('/projects', response_model=list[ProjectGetScheme])
 async def list_projects(cur_user: User = Depends(get_current_user)):
     with Session() as session:
         return read_list(session, Project)

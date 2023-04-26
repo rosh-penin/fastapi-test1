@@ -1,23 +1,34 @@
 from pydantic import BaseModel
 
 
-class ImageGetScheme(BaseModel):
+class ImageCreateScheme(BaseModel):
     filename: str
-    url: str
+    bytes: str
 
     class Config:
         orm_mode = True
 
 
-class ImageCreateScheme(BaseModel):
+class ImageGetScheme(BaseModel):
+    id: int
     filename: str
     bytes: str
+
+    class Config:
+        orm_mode = True
 
 
 class ProjectCreateScheme(BaseModel):
     name: str
     images: list[ImageCreateScheme] | None
-    user_id: str | None
+
+    class Config:
+        orm_mode = True
+
+
+class ProjectGetScheme(BaseModel):
+    name: str
+    images: list[ImageGetScheme]
 
     class Config:
         orm_mode = True

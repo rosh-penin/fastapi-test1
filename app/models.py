@@ -43,7 +43,7 @@ class Image(Base):
     __tablename__ = 'images_table'
     id: Mapped[int] = mapped_column(primary_key=True)
     filename: Mapped[str] = mapped_column(unique=True)
-    url: Mapped[str]
+    bytes: Mapped[str]
     project_id: Mapped[int] = mapped_column(ForeignKey('projects_table.id'))
     project: Mapped['Project'] = relationship(back_populates='images')
 

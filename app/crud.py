@@ -9,7 +9,6 @@ def create(session: sql_session, model: Base, payload: dict):
     obj = model(**payload)
     try:
         session.add(obj)
-        session.commit()
     except IntegrityError:
         raise EXCINT
     return obj
