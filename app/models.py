@@ -1,5 +1,5 @@
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, select, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
 
 from engine import Base, engine
 
@@ -11,8 +11,15 @@ class User(Base):
     last_name: Mapped[str | None]
     username: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
-    projects: Mapped[list['Project']] = relationship(back_populates='user',
-                                                     lazy='joined')
+    projects: Mapped[list['Project']] = relationship(
+        back_populates='user',
+        lazy='joined',
+        cascade='all, delete-orphan'
+    )
+    projects_count: Mapped[int] = column_property(
+        select(func.count('projects_table.id'))
+        .where('projects_table.user_id' == id)
+    )
 
 
 class Project(Base):
@@ -21,14 +28,22 @@ class Project(Base):
     name: Mapped[str] = mapped_column(unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users_table.id'))
     user: Mapped['User'] = relationship(back_populates='projects')
-    images: Mapped[list['Image']] = relationship(back_populates='project',
-                                                 lazy='joined')
+    images: Mapped[list['Image']] = relationship(
+        back_populates='project',
+        lazy='joined',
+        cascade='all, delete-orphan'
+    )
+    images_count: Mapped[int] = column_property(
+        select(func.count('images_table.id'))
+        .where('images_table.project_id' == id)
+    )
 
 
 class Image(Base):
     __tablename__ = 'images_table'
-    url: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     filename: Mapped[str] = mapped_column(unique=True)
+    url: Mapped[str]
     project_id: Mapped[int] = mapped_column(ForeignKey('projects_table.id'))
     project: Mapped['Project'] = relationship(back_populates='images')
 
