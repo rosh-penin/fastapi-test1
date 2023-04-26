@@ -5,7 +5,7 @@ from constants import EXC401
 from crud import create, delete, read_list, update
 from engine import api
 from models import User, Project
-from schemas import (ProjectScheme, UserCreateScheme,
+from schemas import (ProjectCreateScheme, UserCreateScheme,
                      UserRepresentScheme, UserUpdateScheme)
 from utils import auth_user, create_token, get_current_user, get_pass_hash
 
@@ -43,18 +43,29 @@ async def update_user(user: UserUpdateScheme,
     if user.password:
         user.password = get_pass_hash(user.password)
     payload = user.dict(exclude_unset=True, exclude_none=True)
-    update(User, f'id == {cur_user.id}', payload)
+    update(User, {'id': cur_user.id}, payload)
     return user
 
 
 @api.delete('/users/me')
 async def delete_user(cur_user: User = Depends(get_current_user)):
-    delete(User, f'id == {cur_user.id}')
+    delete(User, {'id': cur_user.id})
 
 
 @api.post('/projects')
 async def add_project(
-    proj: ProjectScheme,
-    cur_user: UserRepresentScheme = Depends(get_current_user)
+    proj: ProjectCreateScheme,
+    cur_user: User = Depends(get_current_user)
 ):
+    proj.user_id = cur_user.id
+    if proj.images:
+        images = proj.images.copy()
+        del proj.images
+        print(images)
+    create(Project, proj.dict())
     return proj
+
+
+@api.get('/projects', response_model=list[ProjectCreateScheme])
+async def list_projects(cur_user: User = Depends(get_current_user)):
+    return read_list(Project, joinclause=Project.images)

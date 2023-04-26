@@ -5,10 +5,22 @@ class ImageGetScheme(BaseModel):
     filename: str
     url: str
 
+    class Config:
+        orm_mode = True
 
-class ProjectScheme(BaseModel):
+
+class ImageCreateScheme(BaseModel):
+    filename: str
+    bytes: str
+
+
+class ProjectCreateScheme(BaseModel):
     name: str
-    images: list[ImageGetScheme] | None
+    images: list[ImageCreateScheme] | None
+    user_id: str | None
+
+    class Config:
+        orm_mode = True
 
 
 class UserRepresentScheme(BaseModel):

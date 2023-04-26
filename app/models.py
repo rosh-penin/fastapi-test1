@@ -11,7 +11,8 @@ class User(Base):
     last_name: Mapped[str | None]
     username: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
-    projects: Mapped[list['Project']] = relationship(back_populates='user')
+    projects: Mapped[list['Project']] = relationship(back_populates='user',
+                                                     lazy='joined')
 
 
 class Project(Base):
@@ -20,7 +21,8 @@ class Project(Base):
     name: Mapped[str] = mapped_column(unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users_table.id'))
     user: Mapped['User'] = relationship(back_populates='projects')
-    images: Mapped[list['Image']] = relationship(back_populates='project')
+    images: Mapped[list['Image']] = relationship(back_populates='project',
+                                                 lazy='joined')
 
 
 class Image(Base):
