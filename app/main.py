@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from constants import EXC401
 from crud import create, delete, read_list, update
-from engine import api
+from engine import api, Session
 from models import User, Project
 from schemas import (ProjectCreateScheme, UserCreateScheme,
                      UserRepresentScheme, UserUpdateScheme)
@@ -22,14 +22,16 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
 @api.post('/users', response_model=UserRepresentScheme)
 async def create_user(user: UserCreateScheme):
     user.password = get_pass_hash(user.password)
-    user_obj = create(User, user.dict())
-    return user_obj
+    with Session.begin() as session:
+        user_obj = create(session, User, user.dict())
+        return user_obj
 
 
 @api.get('/users', response_model=list[UserRepresentScheme])
 async def get_users(cur_user: User = Depends(get_current_user)):
     """Get all users."""
-    return read_list(User)
+    with Session() as session:
+        return read_list(session, User)
 
 
 @api.get('/users/me', response_model=UserRepresentScheme)
@@ -40,16 +42,18 @@ async def get_user(cur_user: User = Depends(get_current_user)):
 @api.patch('/users/me', response_model=UserRepresentScheme)
 async def update_user(user: UserUpdateScheme,
                       cur_user: User = Depends(get_current_user)):
-    if user.password:
-        user.password = get_pass_hash(user.password)
-    payload = user.dict(exclude_unset=True, exclude_none=True)
-    update(User, {'id': cur_user.id}, payload)
-    return user
+    with Session.begin() as session:
+        if user.password:
+            user.password = get_pass_hash(user.password)
+        payload = user.dict(exclude_unset=True, exclude_none=True)
+        update(session, User, {'id': cur_user.id}, payload)
+        return user
 
 
 @api.delete('/users/me')
 async def delete_user(cur_user: User = Depends(get_current_user)):
-    delete(User, {'id': cur_user.id})
+    with Session.begin() as session:
+        delete(session, User, {'id': cur_user.id})
 
 
 @api.post('/projects')
@@ -62,10 +66,12 @@ async def add_project(
         images = proj.images.copy()
         del proj.images
         print(images)
-    create(Project, proj.dict())
-    return proj
+    with Session.begin() as session:
+        create(session, Project, proj.dict())
+        return proj
 
 
 @api.get('/projects', response_model=list[ProjectCreateScheme])
 async def list_projects(cur_user: User = Depends(get_current_user)):
-    return read_list(Project, joinclause=Project.images)
+    with Session as session:
+        return read_list(session, Project)
